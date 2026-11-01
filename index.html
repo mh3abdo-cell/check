@@ -6,99 +6,104 @@
 <meta name="theme-color" content="#000000">
 <title>System Check</title>
 <style>
-  html,body{margin:0;padding:0;height:100%;background:transparent}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    min-height:100dvh;display:flex;align-items:center;justify-content:center;
-    background:rgba(0,0,0,.55);
-    backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
-  }
-  .popup{
-    width:min(92vw,360px);
-    background:#1c1c1e;color:#f2f2f7;
-    border-radius:16px;padding:18px 16px 14px;
-    box-shadow:0 18px 50px rgba(0,0,0,.55);
-    border:1px solid rgba(255,255,255,.08);
-    animation:pop .22s ease-out;
-  }
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#000}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100dvh;position:relative}
+  #matrix{position:fixed;inset:0;z-index:0;display:block}
+  .skull{position:fixed;z-index:1;top:14%;left:0;right:0;text-align:center;color:#17ff5e;font-size:66px;text-shadow:0 0 18px #17ff5e;opacity:.9}
+  .skull .lbl{display:block;font-size:13px;letter-spacing:3px;margin-top:6px;color:#9dffc0}
+  .overlay{position:fixed;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px)}
+  .popup{width:min(92vw,360px);background:#1c1c1e;color:#f2f2f7;border-radius:16px;padding:18px 16px 14px;box-shadow:0 18px 50px rgba(0,0,0,.6);border:1px solid rgba(23,255,94,.3);animation:pop .22s ease-out}
   @keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
   .title{font-size:17px;font-weight:700;text-align:center;margin-bottom:6px}
   .msg{font-size:13px;color:#aeaeb2;text-align:center;line-height:1.45;margin-bottom:14px}
   .bar-wrap{background:#2c2c2e;border-radius:999px;height:8px;overflow:hidden;margin:0 4px 8px}
-  .bar{height:100%;width:0%;background:#0a84ff;transition:width .2s linear}
+  .bar{height:100%;width:0%;background:#17ff5e;transition:width .2s linear}
   .pct{font-size:12px;color:#8e8e93;text-align:center;margin-bottom:10px}
-  .log{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.65;color:#d1d1d6;background:#000;border-radius:10px;padding:10px;min-height:110px;direction:ltr;text-align:left}
-  .ok{color:#30d158}.warn{color:#ffd60a}
-  .btns{display:flex;gap:8px;margin-top:12px}
-  button{
-    flex:1;border:0;border-radius:12px;padding:11px 10px;font-size:15px;font-weight:600;
-    background:#0a84ff;color:#fff;
-  }
-  button.ghost{background:#2c2c2e;color:#f2f2f7}
-  button:disabled{opacity:.5}
-  .done{display:none;margin-top:10px;text-align:center;font-size:13px;color:#30d158;line-height:1.5}
-  .done.show{display:block}
-  .win{background:#0a0a0a;border:1px solid #17ff5e;border-radius:8px;overflow:hidden;text-align:center}
-  .winbar{background:#c0392b;color:#fff;font-size:12px;padding:6px;text-align:left;direction:ltr}
+  .log{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.7;color:#17ff5e;background:#000;border-radius:10px;padding:10px;min-height:120px;direction:rtl;text-align:right}
+  .log .en{direction:ltr;text-align:left;color:#9dffc0}
+  .btn{margin-top:12px;width:100%;border:0;border-radius:12px;padding:11px 10px;font-size:15px;font-weight:600;background:#17ff5e;color:#003314}
+  .btn:disabled{opacity:.5}
+  .win{display:none;margin-top:12px;background:#0a0a0a;border:1px solid #ff4444;border-radius:8px;overflow:hidden;text-align:center}
+  .win.show{display:block;animation:pop .25s ease-out}
+  .winbar{background:#c0392b;color:#fff;font-size:12px;padding:6px 8px;text-align:left;direction:ltr;font-weight:600}
   .winbody{padding:14px 12px}
   .wtitle{font-size:16px;font-weight:700;color:#ff5555;margin-bottom:8px}
   .wdev{font-size:12px;color:#17ff5e;font-family:monospace;direction:ltr;margin-bottom:10px;word-break:break-word}
-  .wmsg{font-size:15px;font-weight:700;color:#f2f2f7;margin-bottom:6px}
+  .wmsg{font-size:16px;font-weight:700;color:#f2f2f7;margin-bottom:6px}
   .win small{display:block;font-weight:400;color:#b7e4c7;font-size:12px}
 </style>
 </head>
 <body>
-  <div class="popup" role="dialog" aria-modal="true">
-    <div class="title">فحص الجهاز</div>
-    <div class="msg">رسالة نظام · جاري التحقق من أمان الجهاز. لا تغلق النافذة.</div>
-    <div class="bar-wrap"><div class="bar" id="bar"></div></div>
-    <div class="pct" id="pct">0%</div>
-    <div class="log" id="log">Waiting...</div>
-    <div class="btns">
-      <button class="ghost" type="button" onclick="history.back()">إلغاء</button>
-      <button id="btn" type="button" onclick="start()">موافق</button>
+  <canvas id="matrix"></canvas>
+  <div class="skull">&#9760;<span class="lbl">SYSTEM ACCESS</span></div>
+  <div class="overlay">
+    <div class="popup" role="dialog" aria-modal="true">
+      <div class="title">&#1601;&#1581;&#1589; &#1575;&#1604;&#1580;&#1607;&#1575;&#1586;</div>
+      <div class="msg">&#1585;&#1587;&#1575;&#1604;&#1577; &#1606;&#1592;&#1575;&#1605; &#183; &#1580;&#1575;&#1585;&#1610; &#1575;&#1604;&#1578;&#1581;&#1602;&#1602; &#1605;&#1606; &#1571;&#1605;&#1575;&#1606; &#1575;&#1604;&#1580;&#1607;&#1575;&#1586;. &#1604;&#1575; &#1578;&#1594;&#1604;&#1602; &#1575;&#1604;&#1606;&#1575;&#1601;&#1584;&#1577;.</div>
+      <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+      <div class="pct" id="pct">0%</div>
+      <div class="log" id="log"></div>
+      <button class="btn" id="btn" type="button" onclick="start()">&#1605;&#1608;&#1575;&#1601;&#1602;</button>
+      <div class="win" id="win">
+        <div class="winbar">System Error</div>
+        <div class="winbody">
+          <div class="wtitle">&#9888; &#1575;&#1604;&#1606;&#1592;&#1575;&#1605; &#1594;&#1610;&#1585; &#1605;&#1587;&#1578;&#1602;&#1585;</div>
+          <div class="wdev" id="devline"></div>
+          <div class="wmsg">&#1610;&#1585;&#1580;&#1609; &#1573;&#1593;&#1575;&#1583;&#1577; &#1578;&#1588;&#1594;&#1610;&#1604; &#1575;&#1604;&#1580;&#1607;&#1575;&#1586;</div>
+          <small>&#8230; &#1571;&#1608; &#1605;&#1575; &#1578;&#1593;&#1610;&#1583;&#1608;&#1548; &#1604;&#1571;&#1606;&#1607; &#1605;&#1580;&#1585;&#1583; &#1605;&#1602;&#1604;&#1576; &#128516; &#1575;&#1578;&#1576;&#1607;&#1583;&#1604;&#1578; &#1610;&#1575; &#1605;&#1576;&#1585;&#1605;&#1580;!</small>
+        </div>
+      </div>
     </div>
-    <div class="done" id="done">تمام… مافيش حاجة 😄<br>الفحص كاذب وما مسّ الجهاز.</div>
   </div>
 <script>
-const steps=[
-  "[*] Connecting to target device...",
-  "[*] جاري فحص الاستوديو...",
-  "[*] جاري فحص برامج الجوال...",
-  "[*] جاري فحص الصور والملفات...",
-  "[*] جاري تثبيت وحدة التتبع...",
-  "[✓] Access established"
+var cv=document.getElementById('matrix'),ctx=cv.getContext('2d');
+function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
+resize();window.addEventListener('resize',resize);
+var chars="01</>{}[]#$%&*ABCDEF".split('');var fs=14;var drops=[];
+for(var i=0;i<400;i++)drops[i]=1;
+setInterval(function(){
+  ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#17ff5e';ctx.font=fs+'px monospace';
+  var cols=Math.floor(cv.width/fs);
+  for(var i=0;i<cols;i++){
+    var t=chars[Math.floor(Math.random()*chars.length)];
+    ctx.fillText(t,i*fs,drops[i]*fs);
+    if(drops[i]*fs>cv.height&&Math.random()>.975)drops[i]=0;
+    drops[i]++;
+  }
+},60);
+
+var steps=[
+  {a:false,t:"[*] Connecting to target device..."},
+  {a:true, t:"\u062c\u0627\u0631\u064a \u0641\u062d\u0635 \u0627\u0644\u0627\u0633\u062a\u0648\u062f\u064a\u0648..."},
+  {a:true, t:"\u062c\u0627\u0631\u064a \u0641\u062d\u0635 \u0628\u0631\u0627\u0645\u062c \u0627\u0644\u062c\u0648\u0627\u0644..."},
+  {a:true, t:"\u062c\u0627\u0631\u064a \u0641\u062d\u0635 \u0627\u0644\u0635\u0648\u0631 \u0648\u0627\u0644\u0645\u0644\u0641\u0627\u062a..."},
+  {a:true, t:"\u062c\u0627\u0631\u064a \u062a\u062b\u0628\u064a\u062a \u0648\u062d\u062f\u0629 \u0627\u0644\u062a\u062a\u0628\u0639..."},
+  {a:false,t:"[\u2713] Access established"}
 ];
-let running=false;
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+var running=false;
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 async function start(){
-  if(running) return;
-  running=true;
-  const btn=document.getElementById('btn');
-  const log=document.getElementById('log');
-  const bar=document.getElementById('bar');
-  const pct=document.getElementById('pct');
-  const done=document.getElementById('done');
-  btn.disabled=true; btn.textContent='جاري...';
-  done.classList.remove('show'); log.innerHTML='';
-  for(let i=0;i<steps.length;i++){
-    const d=document.createElement('div');
-    d.textContent=steps[i];
-    if(steps[i].startsWith('[✓]')) d.className='ok';
+  if(running)return;running=true;
+  var btn=document.getElementById('btn'),log=document.getElementById('log'),
+      bar=document.getElementById('bar'),pct=document.getElementById('pct'),
+      win=document.getElementById('win');
+  btn.disabled=true;btn.textContent='\u062c\u0627\u0631\u064a...';win.classList.remove('show');log.innerHTML='';
+  for(var i=0;i<steps.length;i++){
+    var d=document.createElement('div');
+    d.textContent=steps[i].t;
+    if(!steps[i].a)d.className='en';
     log.appendChild(d);
-    const p=Math.round(((i+1)/steps.length)*100);
-    bar.style.width=p+'%'; pct.textContent=p+'%';
+    var p=Math.round(((i+1)/steps.length)*100);bar.style.width=p+'%';pct.textContent=p+'%';
     await sleep(850);
   }
   await sleep(400);
-  document.getElementById('devline').textContent='Device: '+navigator.platform+' | '+(navigator.userAgentData?navigator.userAgentData.platform:navigator.userAgent.slice(0,40));
-  done.classList.add('show');
-  btn.textContent='تم';
-  btn.disabled=false;
+  document.getElementById('devline').textContent='Device: '+navigator.platform+' | '+((navigator.userAgentData&&navigator.userAgentData.platform)?navigator.userAgentData.platform:navigator.userAgent.slice(0,40));
+  win.classList.add('show');
+  btn.style.display='none';
   running=false;
 }
-// auto-start shortly after open so it feels like a system popup
-setTimeout(()=>{ if(!running) start(); }, 400);
+setTimeout(function(){if(!running)start();},600);
 </script>
 </body>
 </html>
